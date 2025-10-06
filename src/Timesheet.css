@@ -1,0 +1,203 @@
+.timesheet-container {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: #f0f4f8; /* Changed from linear-gradient to solid color */
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.timesheet-title {
+  color: #2c3e50;
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 24px;
+}
+
+.success-message {
+  color: #27ae60;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.error-message {
+  color: #e74c3c;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.error-message .retry-button {
+  padding: 5px 10px;
+  background-color: #3498db;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.timesheet-form {
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+.form-group textarea {
+  height: 100px;
+  resize: vertical;
+}
+
+.time-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.time-buttons button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.time-buttons button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.time-buttons button:nth-child(1):not(:disabled) {
+  background-color: #2ecc71;
+  color: #fff;
+}
+
+.time-buttons button:nth-child(1):not(:disabled):hover {
+  background-color: #27ae60;
+}
+
+.time-buttons button:nth-child(2):not(:disabled) {
+  background-color: #e74c3c;
+  color: #fff;
+}
+
+.time-buttons button:nth-child(2):not(:disabled):hover {
+  background-color: #c0392b;
+}
+
+.track-time {
+  text-align: center;
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.form-actions {
+  text-align: center;
+}
+
+.form-actions button {
+  padding: 10px 20px;
+  background-color: #2ecc71;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+.form-actions button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.form-actions button:hover:not(:disabled) {
+  background-color: #27ae60;
+}
+
+.form-actions button:nth-child(2) {
+  background-color: #6c757d;
+  margin-left: 10px;
+}
+
+.form-actions button:nth-child(2):hover {
+  background-color: #5a6268;
+}
+
+.loading-message,
+.no-timesheets {
+  text-align: center;
+  color: #34495e;
+}
+
+.timesheet-table-title {
+  color: #2c3e50;
+  margin-bottom: 10px;
+}
+
+.timesheet-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.timesheet-table thead {
+  background-color: #ecf0f1;
+}
+
+.timesheet-table th,
+.timesheet-table td {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.timesheet-table th {
+  border-bottom: 2px solid #ddd;
+}
+
+.timesheet-table td button {
+  padding: 5px 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-right: 5px;
+  transition: background-color 0.3s;
+}
+
+.timesheet-table td button:nth-child(1) {
+  background-color: #3498db;
+  color: #fff;
+}
+
+.timesheet-table td button:nth-child(1):hover {
+  background-color: #2980b9;
+}
+
+.timesheet-table td button:nth-child(2) {
+  background-color: #e74c3c;
+  color: #fff;
+}
+
+.timesheet-table td button:nth-child(2):hover {
+  background-color: #c0392b;
+}
