@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import '../App.css';
 
 const LoginForm = () => {
-  const [formData, setFormData] = useState({ email: '', password: '' }); // Keeping email
+  const [formData, setFormData] = useState({ username: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
   const [loading, setLoading] = useState(false);
@@ -14,7 +14,7 @@ const LoginForm = () => {
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const validateForm = () => {
-    if (!formData.email.trim()) return 'Email is required.';
+    if (!formData.username.trim()) return 'Username is required.';
     if (!formData.password.trim()) return 'Password is required.';
     return '';
   };
@@ -31,48 +31,40 @@ const LoginForm = () => {
     setMessage({ text: '', type: '' });
 
     try {
+      // Login request
       const loginRes = await fetch(`${BASE_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
-        credentials: 'include', // Try to include cookies if needed
       });
 
-      const loginData = await loginRes.text();
-      console.log('Login response (raw):', loginData, 'Status:', loginRes.status, 'Headers:', Object.fromEntries(loginRes.headers));
-
-      let parsedLoginData = {};
-      try {
-        parsedLoginData = JSON.parse(loginData);
-      } catch (e) {
-        console.error('Failed to parse login response:', loginData);
-        setMessage({ text: 'Invalid server response. Please try again.', type: 'error' });
-        setLoading(false);
-        return;
-      }
+      const loginData = await loginRes.json();
 
       if (!loginRes.ok) {
-        setMessage({ text: parsedLoginData.message || 'Login failed. Please check your credentials.', type: 'error' });
+        setMessage({ text: loginData.message || 'Login failed. Please check your credentials.', type: 'error' });
         setLoading(false);
         return;
       }
 
-      localStorage.setItem('accessToken', parsedLoginData.accessToken);
-      localStorage.setItem('refreshToken', parsedLoginData.refreshToken || '');
+      // Store tokens
+      localStorage.setItem('accessToken', loginData.accessToken);
+      localStorage.setItem('refreshToken', loginData.refreshToken);
 
+      // Fetch user data to check profile existence
       const userRes = await fetch(`${BASE_URL}/api/users/me`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${parsedLoginData.accessToken}`,
+          'Authorization': `Bearer ${loginData.accessToken}`,
         },
       });
 
       const userData = await userRes.json();
-      console.log('User data response:', userData, 'Status:', userRes.status);
 
       if (userRes.ok) {
         setMessage({ text: 'Login successful!', type: 'success' });
+
+        // Check if profile exists
         if (!userData.profile) {
           setTimeout(() => navigate(`/create-profile/${userData.id}`), 1500);
         } else {
@@ -83,11 +75,11 @@ const LoginForm = () => {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
       } else {
-        setMessage({ text: `Failed to fetch user data: ${userRes.status} - ${userData.message || 'Unknown error'}`, type: 'error' });
+        setMessage({ text: `Failed to fetch user data: ${userRes.status}`, type: 'error' });
       }
     } catch (error) {
       console.error('Login error:', error);
-      setMessage({ text: 'Network error. Please try again. Check console for details.', type: 'error' });
+      setMessage({ text: 'Network error or invalid credentials. Please try again.', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -111,16 +103,16 @@ const LoginForm = () => {
 
         <form onSubmit={handleSubmit} className="form-container">
           <div className="input-group">
-            <label>Email</label>
+            <label>Username</label>
             <div className="input-wrapper">
               <User className="input-icon" />
               <input
-                type="email"
-                name="email"
-                value={formData.email}
+                type="text"
+                name="username"
+                value={formData.username}
                 onChange={handleChange}
                 className="input-field"
-                placeholder="Enter email"
+                placeholder="Enter username"
                 disabled={loading}
               />
             </div>
