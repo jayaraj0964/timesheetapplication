@@ -1,4 +1,4 @@
-/* Container */
+
 .auth-container, .password-reset-container {
   display: flex;
   justify-content: center;
@@ -8,7 +8,7 @@
   font-family: 'Segoe UI', sans-serif;
 }
 
-/* Card */
+
 .auth-card, .password-reset-card {
   background-color: #1f1f1f;
   padding: 2rem;
@@ -19,7 +19,7 @@
   box-shadow: 0 0 20px rgba(0,0,0,0.3);
 }
 
-/* Header */
+
 .header-section {
   text-align: center;
   margin-bottom: 1.5rem;
@@ -38,7 +38,7 @@
   color: #ccc;
 }
 
-/* Input Group */
+
 .input-group {
   margin-bottom: 1.2rem;
 }
@@ -48,7 +48,7 @@
   font-weight: 500;
 }
 
-/* Input Wrapper */
+
 .input-wrapper, .password-input-wrapper {
   display: flex;
   align-items: center;
@@ -72,13 +72,12 @@
   font-size: 1rem;
 }
 
-/* Password Input Wrapper */
 .password-input-wrapper {
   position: relative;
 }
 
 .password-input-wrapper .input-field {
-  padding-right: 2.5rem; /* Space for the toggle button */
+  padding-right: 2.5rem;
   width: 100%;
 }
 
@@ -120,15 +119,14 @@
 }
 
 .input-field option:checked {
-  background-color: #007bff; /* Blue background for selected option */
+  background-color: #007bff; 
   color: #fff;
 }
 
 .input-field option:disabled {
-  color: #888; /* Gray out disabled/placeholder option */
+  color: #888; 
 }
 
-/* Remove default arrow in IE */
 .input-field::-ms-expand {
   display: none;
 }
@@ -137,7 +135,6 @@
   border-color: #ff80ab;
 }
 
-/* Submit Button */
 .submit-button {
   width: 100%;
   padding: 0.75rem;
@@ -157,7 +154,6 @@
   cursor: not-allowed;
 }
 
-/* Message */
 .message {
   display: flex;
   align-items: center;
@@ -180,14 +176,14 @@
   font-size: 0.9rem;
 }
 
-/* Error Text */
+
 .error-text {
   color: #ff5252;
   font-size: 0.8rem;
   margin-top: 0.3rem;
 }
 
-/* Footer */
+
 .footer-section {
   margin-top: 1rem;
   text-align: center;
@@ -202,7 +198,7 @@
   color: #ccc;
 }
 
-/* 🔝 Top Row */
+
 .dashboard-top-row {
   display: flex;
   justify-content: center;
@@ -251,9 +247,9 @@
 .admin-name {
   color: #ff80ab;
   font-weight: bold;
-} */
+} 
 
-/* 🔝 Top Row */
+
 .dashboard-top-row {
   display: flex;
   justify-content: center;
@@ -285,7 +281,7 @@
   font-size: 0.9rem;
 }
 
-/* 🎯 Center Box */
+
 .dashboard-center-box {
   background-color: #000;
   padding: 1.5rem 2rem;
