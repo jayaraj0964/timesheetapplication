@@ -42,14 +42,57 @@ class TimesheetManagement extends Component {
     this.timer = null;
   }
 
+  // Singleton timer management
+  static timerInstance = null;
+  static getTimerInstance() {
+    if (!TimesheetManagement.timerInstance) {
+      TimesheetManagement.timerInstance = {
+        timeIn: null,
+        interval: null,
+        updateElapsedTime: (newTime) => {
+          if (TimesheetManagement.timerInstance.currentInstance) {
+            TimesheetManagement.timerInstance.currentInstance.setState({ elapsedTime: newTime });
+          }
+        },
+        currentInstance: null,
+      };
+    }
+    return TimesheetManagement.timerInstance;
+  }
+
   componentDidMount() {
+    const timerInstance = TimesheetManagement.getTimerInstance();
+    timerInstance.currentInstance = this;
+
     const savedTimeIn = localStorage.getItem('timeIn');
     const savedIsTracking = localStorage.getItem('isTracking') === 'true';
     const savedElapsedTime = localStorage.getItem('elapsedTime') || '00:00:00';
 
-    if (savedTimeIn && savedIsTracking) {
-      this.setState({ timeIn: new Date(savedTimeIn), isTracking: true, elapsedTime: savedElapsedTime }, () => {
-        if (this.state.isTracking) this.startTimer();
+    let timeIn = null;
+    if (savedTimeIn && savedTimeIn !== 'null' && savedTimeIn !== '') {
+      timeIn = new Date(savedTimeIn);
+      if (isNaN(timeIn.getTime())) timeIn = null;
+    }
+
+    if (timeIn && savedIsTracking) {
+      const elapsedMs = new Date() - timeIn;
+      const hours = Math.floor(elapsedMs / 3600000);
+      const minutes = Math.floor((elapsedMs % 3600000) / 60000);
+      const seconds = Math.floor((elapsedMs % 60000) / 1000);
+      const currentElapsedTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+      this.setState({
+        timeIn,
+        isTracking: true,
+        elapsedTime: currentElapsedTime,
+      }, () => {
+        if (!timerInstance.interval) this.startTimer();
+      });
+    } else if (timerInstance.timeIn && timerInstance.interval) {
+      this.setState({
+        timeIn: timerInstance.timeIn,
+        isTracking: true,
+        elapsedTime: savedElapsedTime,
       });
     }
 
@@ -62,7 +105,16 @@ class TimesheetManagement extends Component {
   }
 
   componentWillUnmount() {
-    this.stopTimer();
+    const timerInstance = TimesheetManagement.getTimerInstance();
+    if (this.state.isTracking) {
+      timerInstance.timeIn = this.state.timeIn;
+      timerInstance.currentInstance = null; // Clear current instance reference
+    } else {
+      this.stopTimer();
+      timerInstance.timeIn = null;
+      timerInstance.interval = null;
+      timerInstance.currentInstance = null;
+    }
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -79,13 +131,8 @@ class TimesheetManagement extends Component {
     try {
       const accessToken = localStorage.getItem('accessToken');
       if (!accessToken) throw new Error('No authentication token found. Please log in.');
-      console.log('Fetching current user with Access Token:', accessToken);
-
       const response = await fetch(`${BASE_URL}/api/users/me`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
       });
       if (!response.ok) {
         const errorText = await response.text();
@@ -93,22 +140,13 @@ class TimesheetManagement extends Component {
         throw new Error(`Failed to fetch current user: ${response.status} - ${errorText}`);
       }
       const userData = await response.json();
-      console.log('Raw User Data from /api/users/me:', userData);
-
       const appUserId = userData.id;
       const role = userData.role || 'ROLE_USER';
       const profileUserId = userData.profile?.userId || '';
-
-      this.setState((prevState) => {
-        const newCurrentUser = { ...prevState.currentUser, id: appUserId, role, userId: profileUserId.toString() };
-        console.log('New currentUser state before set:', newCurrentUser);
-        return {
-          currentUser: newCurrentUser,
-          userId: role === 'ROLE_USER' ? profileUserId.toString() : prevState.userId,
-        };
-      }, () => {
-        console.log('CurrentUser state after update:', this.state.currentUser);
-      });
+      this.setState((prevState) => ({
+        currentUser: { ...prevState.currentUser, id: appUserId, role, userId: profileUserId.toString() },
+        userId: role === 'ROLE_USER' ? profileUserId.toString() : prevState.userId,
+      }));
     } catch (error) {
       console.error('Error in fetchCurrentUser:', error);
       this.setState({ error: error.message });
@@ -125,10 +163,7 @@ class TimesheetManagement extends Component {
       const accessToken = localStorage.getItem('accessToken');
       if (!accessToken) throw new Error('No authentication token found. Please log in.');
       const response = await fetch(`${BASE_URL}/api/timesheets`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
       });
       if (!response.ok) {
         const errorText = await response.text();
@@ -136,7 +171,6 @@ class TimesheetManagement extends Component {
         throw new Error(`Failed to fetch timesheets: ${response.status} - ${errorText}`);
       }
       const timesheets = await response.json();
-      console.log('Fetched timesheets from API:', timesheets);
       this.setState({ timesheets });
     } catch (error) {
       console.error('Error fetching timesheets:', error);
@@ -153,10 +187,7 @@ class TimesheetManagement extends Component {
       const accessToken = localStorage.getItem('accessToken');
       if (!accessToken) throw new Error('No authentication token found. Please log in.');
       const response = await fetch(`${BASE_URL}/api/task-categories`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
       });
       if (!response.ok) {
         const errorText = await response.text();
@@ -180,10 +211,7 @@ class TimesheetManagement extends Component {
       const accessToken = localStorage.getItem('accessToken');
       if (!accessToken) throw new Error('No authentication token found. Please log in.');
       const response = await fetch(`${BASE_URL}/api/shifts`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
       });
       if (!response.ok) {
         const errorText = await response.text();
@@ -207,20 +235,14 @@ class TimesheetManagement extends Component {
       const accessToken = localStorage.getItem('accessToken');
       if (!accessToken) throw new Error('No authentication token found. Please log in.');
       const response = await fetch(`${BASE_URL}/api/users/all`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
       });
       if (!response.ok) {
         const errorText = await response.text();
-        if (response.status === 403) {
-          throw new Error('');
-        }
+        if (response.status === 403) throw new Error('Access denied. Please check your authentication token or permissions.');
         throw new Error(`Failed to fetch users: ${response.status} - ${errorText}`);
       }
       const users = await response.json();
-      console.log('Fetched all users:', users);
       this.setState({ users });
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -247,6 +269,8 @@ class TimesheetManagement extends Component {
     }
     if (!this.state.isTracking) {
       const newTimeIn = new Date();
+      const timerInstance = TimesheetManagement.getTimerInstance();
+      timerInstance.timeIn = newTimeIn;
       this.setState({ timeIn: newTimeIn, isTracking: true, elapsedTime: '00:00:00' }, this.startTimer);
     }
   };
@@ -287,14 +311,9 @@ class TimesheetManagement extends Component {
       if (!userId && currentUser.role !== 'ROLE_ADMIN') {
         throw new Error('User ID is required for non-admin users.');
       }
-      console.log('Final userId before POST in handleTimeOut:', userId);
-      console.log('Full state before POST:', this.state);
       const response = await fetch(`${BASE_URL}/api/timesheets/posttimesheet`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           workDate: this.state.workDate,
           hoursWorked,
@@ -326,6 +345,7 @@ class TimesheetManagement extends Component {
       localStorage.removeItem('timeIn');
       localStorage.removeItem('isTracking');
       localStorage.removeItem('elapsedTime');
+      TimesheetManagement.getTimerInstance().timeIn = null;
     } catch (error) {
       console.error('Error in handleTimeOut:', error);
       this.setState({ error: error.message });
@@ -354,18 +374,13 @@ class TimesheetManagement extends Component {
       const accessToken = localStorage.getItem('accessToken');
       if (!accessToken) throw new Error('No authentication token found. Please log in.');
       const userId = this.state.userId;
-      console.log('Final userId before POST in handleAddOrUpdate:', userId);
-      console.log('Full state before POST:', this.state);
       const url = editingId
         ? `${BASE_URL}/api/timesheets/${editingId}`
         : `${BASE_URL}/api/timesheets/posttimesheet`;
       const method = editingId ? 'PUT' : 'POST';
       const response = await fetch(url, {
         method,
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           workDate,
           hoursWorked: `${hoursWorked}:00`,
@@ -404,7 +419,6 @@ class TimesheetManagement extends Component {
       this.setState({ error: 'Only admins can edit timesheets.' });
       return;
     }
-    console.log('Editing timesheet:', timesheet);
     this.setState({
       editingId: timesheet.timesheetId,
       workDate: timesheet.workDate,
@@ -429,9 +443,7 @@ class TimesheetManagement extends Component {
         if (!accessToken) throw new Error('No authentication token found. Please log in.');
         const response = await fetch(`${BASE_URL}/api/timesheets/${timesheetId}`, {
           method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-          },
+          headers: { 'Authorization': `Bearer ${accessToken}` },
         });
         if (!response.ok) {
           const errorText = await response.text();
@@ -450,23 +462,29 @@ class TimesheetManagement extends Component {
   };
 
   startTimer = () => {
-    this.timer = setInterval(() => {
+  const timerInstance = TimesheetManagement.getTimerInstance();
+  if (!timerInstance.interval) {
+    timerInstance.interval = setInterval(() => {
+      // Ensure this.state is accessible by capturing it in a local variable
       const { timeIn, isTracking } = this.state;
       if (isTracking && timeIn) {
         const elapsedMs = new Date() - new Date(timeIn);
         const hours = Math.floor(elapsedMs / 3600000);
         const minutes = Math.floor((elapsedMs % 3600000) / 60000);
         const seconds = Math.floor((elapsedMs % 60000) / 1000);
-        this.setState({
-          elapsedTime: `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`,
-        });
+        const newElapsedTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        timerInstance.updateElapsedTime(newElapsedTime);
       }
     }, 1000);
-  };
+  }
+};
 
-  stopTimer = () => {
-    clearInterval(this.timer);
-    this.timer = null;
+  stopTimer = ()=> {
+    const timerInstance = TimesheetManagement.getTimerInstance();
+    if (timerInstance.interval) {
+      clearInterval(timerInstance.interval);
+      timerInstance.interval = null;
+    }
   };
 
   render() {
